@@ -1,0 +1,7 @@
+docker run --name idx-mysql-local 
+-e MYSQL_DATABASE=rets 
+-e MYSQL_ROOT_PASSWORD=root 
+-p 3306:3306 
+-d mysql:8
+mysql -h 127.0.0.1 -P 3306 -u root -p rets < file1.sql
+mysql -h 127.0.0.1 -P 3306 -u root -p rets < file2.sql
