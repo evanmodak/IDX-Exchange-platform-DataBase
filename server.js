@@ -1,11 +1,34 @@
-require ("dotenv").config();
+require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
-const pool = require("./config/db");
+const pool = require("./configure");
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
-app.get("/api/health", async (req, res) => {})
+app.get("/api/health", async (req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT 1 AS status");
+
+    res.status(200).json({
+      success: true,
+      database: "connected",
+      result: rows[0],
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      database: "disconnected",
+      error: error.message,
+    });
+  }
+});
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
