@@ -1,18 +1,17 @@
 require("dotenv").config();
 
-const express = require("express");
-const cors = require("cors");
 const pool = require("./configure");
-
+const propertiesRouter = require("./routes/properties");
+ 
 const app = express();
-
+ 
 app.use(cors());
 app.use(express.json());
-
+ 
 app.get("/api/health", async (req, res) => {
   try {
     const [rows] = await pool.query("SELECT 1 AS status");
-
+ 
     res.status(200).json({
       success: true,
       database: "connected",
@@ -26,9 +25,15 @@ app.get("/api/health", async (req, res) => {
     });
   }
 });
-
+ 
+app.use("/api/properties", propertiesRouter);
+ 
 const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
+ 
+const httpServer = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+httpServer.on("error", (err) => {
+  console.error("SERVER ERROR:", err);
 });
