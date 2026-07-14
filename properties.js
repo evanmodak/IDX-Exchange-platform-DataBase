@@ -32,7 +32,6 @@ router.get("/", async (req, res) => {
     return res.status(400).json({ error: "baths must be a number" });
   }
  
-  // 
   const conditions = [];
   const values = [];
  
@@ -99,3 +98,85 @@ router.get("/", async (req, res) => {
 });
  
 module.exports = router;
+
+function isValidId(v) {
+  const s = String(v).trim();
+
+ return /^\d+$/.test(s) && s.length <= 15;
+}
+
+router.get("/:id/openhouses", async (req, res) => {
+  const { id } = req.params;
+
+  if (!isValidId(id)) {
+    return res.status(400).json({ error: "id must be a valid integer listing ID" });
+  }
+
+  try {
+    const listingId = id.trim();
+
+   
+    const [propertyRows] = await pool.query(
+      "SELECT id FROM rets_property WHERE L_ListingID = ? LIMIT 1",
+      [listingId]
+    );
+
+    if (propertyRows.length === 0) {
+      return res.status(404).json({ error: `No property found with id ${listingId}` });
+    }
+
+    const [openHouseRows] = await pool.query(
+      `SELECT
+         id,
+         L_ListingID   AS listingId,
+         event_date    AS date,
+         start_time    AS startTime,
+         end_time      AS endTime,
+         all_data      AS allData
+       FROM rets_openhouse
+       WHERE L_ListingID = ?
+       ORDER BY event_date ASC, start_time ASC`,
+      [listingId]
+    );
+
+    res.json(openHouseRows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get("/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (!isValidId(id)) {
+    return res.status(400).json({ error: "id must be a valid integer listing ID" });
+  }
+
+  try {
+    const [rows] = await pool.query(
+      `SELECT
+         id,
+         L_ListingID   AS listingId,
+         L_Address     AS address,
+         L_City        AS city,
+         L_Zip         AS zipcode,
+         L_SystemPrice AS price,
+         L_Keyword2    AS beds,
+         LM_Dec_3      AS baths
+       FROM rets_property
+       WHERE L_ListingID = ?
+       LIMIT 1`,
+      [id.trim()]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: `No property found with id ${id}` });
+    }
+
+    res.json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
