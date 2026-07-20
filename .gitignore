@@ -1,2 +1,28 @@
-node_modules
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Environment variables
 .env
+.env.local
+backend/.env
+frontend/.env
+
+# Build output
+frontend/build/
+backend/dist/
+
+# Logs
+npm-debug.log*
+*.log
+
+# OS files
+.DS_Store
+
+# Docker
+docker-compose.override.yml
+
+# Editor
+.vscode/
+.idea/
