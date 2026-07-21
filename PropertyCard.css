@@ -1,0 +1,57 @@
+.property-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.property-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.property-card-image-wrap {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #f0f0f0;
+  overflow: hidden;
+}
+
+.property-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.property-card-body {
+  padding: 12px 14px;
+}
+
+.property-card-price {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.property-card-address {
+  font-size: 0.95rem;
+  color: #333;
+  margin-top: 2px;
+}
+
+.property-card-citystate {
+  font-size: 0.85rem;
+  color: #777;
+  margin-top: 2px;
+}
+
+.property-card-stats {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: #444;
+}
