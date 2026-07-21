@@ -1,18 +1,17 @@
 const express = require("express");
 const pool = require("../configure");
- 
+
 const router = express.Router();
- 
+
 function isInt(v) {
   return /^\d+$/.test(String(v).trim());
 }
- 
+
 router.get("/", async (req, res) => {
   const { city, zipcode, minPrice, maxPrice, beds, baths } = req.query;
   const limit = req.query.limit ?? 20;
   const offset = req.query.offset ?? 0;
- 
-  // validation
+
   if (!isInt(limit) || limit < 1 || limit > 100) {
     return res.status(400).json({ error: "limit must be an integer between 1 and 100" });
   }
@@ -31,10 +30,10 @@ router.get("/", async (req, res) => {
   if (baths !== undefined && isNaN(parseFloat(baths))) {
     return res.status(400).json({ error: "baths must be a number" });
   }
- 
+
   const conditions = [];
   const values = [];
- 
+
   if (city !== undefined) {
     conditions.push("LOWER(TRIM(L_City)) = LOWER(TRIM(?))");
     values.push(city);
@@ -59,32 +58,35 @@ router.get("/", async (req, res) => {
     conditions.push("LM_Dec_3 = ?");
     values.push(parseFloat(baths));
   }
- 
+
   const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
- 
+
   try {
     const [countRows] = await pool.query(
       `SELECT COUNT(*) AS total FROM rets_property ${whereClause}`,
       values
     );
- 
+
     const [rows] = await pool.query(
       `SELECT
          id,
-         L_ListingID   AS listingId,
-         L_Address     AS address,
-         L_City        AS city,
-         L_Zip         AS zipcode,
-         L_SystemPrice AS price,
-         L_Keyword2    AS beds,
-         LM_Dec_3      AS baths
+         L_ListingID       AS listingId,
+         L_Address         AS address,
+         L_City            AS city,
+         L_State           AS state,
+         L_Zip             AS zipcode,
+         L_SystemPrice     AS price,
+         L_Keyword2        AS beds,
+         LM_Dec_3          AS baths,
+         LotSizeSquareFeet AS sqft,
+         L_Photos
        FROM rets_property
        ${whereClause}
        ORDER BY id
        LIMIT ? OFFSET ?`,
       [...values, parseInt(limit, 10), parseInt(offset, 10)]
     );
- 
+
     res.json({
       total: countRows[0].total,
       limit: parseInt(limit, 10),
@@ -96,13 +98,10 @@ router.get("/", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
- 
-module.exports = router;
 
 function isValidId(v) {
   const s = String(v).trim();
-
- return /^\d+$/.test(s) && s.length <= 15;
+  return /^\d+$/.test(s) && s.length <= 15;
 }
 
 router.get("/:id/openhouses", async (req, res) => {
@@ -115,7 +114,6 @@ router.get("/:id/openhouses", async (req, res) => {
   try {
     const listingId = id.trim();
 
-   
     const [propertyRows] = await pool.query(
       "SELECT id FROM rets_property WHERE L_ListingID = ? LIMIT 1",
       [listingId]
@@ -129,13 +127,13 @@ router.get("/:id/openhouses", async (req, res) => {
       `SELECT
          id,
          L_ListingID   AS listingId,
-         event_date    AS date,
-         start_time    AS startTime,
-         end_time      AS endTime,
+         OpenHouseDate AS date,
+         OH_StartTime  AS startTime,
+         OH_EndTime    AS endTime,
          all_data      AS allData
        FROM rets_openhouse
        WHERE L_ListingID = ?
-       ORDER BY event_date ASC, start_time ASC`,
+       ORDER BY OpenHouseDate ASC, OH_StartTime ASC`,
       [listingId]
     );
 
@@ -157,13 +155,16 @@ router.get("/:id", async (req, res) => {
     const [rows] = await pool.query(
       `SELECT
          id,
-         L_ListingID   AS listingId,
-         L_Address     AS address,
-         L_City        AS city,
-         L_Zip         AS zipcode,
-         L_SystemPrice AS price,
-         L_Keyword2    AS beds,
-         LM_Dec_3      AS baths
+         L_ListingID       AS listingId,
+         L_Address         AS address,
+         L_City            AS city,
+         L_State           AS state,
+         L_Zip             AS zipcode,
+         L_SystemPrice     AS price,
+         L_Keyword2        AS beds,
+         LM_Dec_3          AS baths,
+         LotSizeSquareFeet AS sqft,
+         L_Photos
        FROM rets_property
        WHERE L_ListingID = ?
        LIMIT 1`,
@@ -180,3 +181,5 @@ router.get("/:id", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+module.exports = router;
