@@ -1,0 +1,31 @@
+.property-map {
+  margin-top: 12px;
+}
+
+.property-map-frame {
+  width: 100%;
+  height: 320px;
+  border: 0;
+  border-radius: 8px;
+}
+
+.property-map-directions {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 0.9rem;
+  color: #1a73e8;
+  text-decoration: none;
+}
+
+.property-map-directions:hover {
+  text-decoration: underline;
+}
+
+.property-map-missing-key {
+  padding: 16px;
+  background: #fff4e5;
+  border: 1px solid #f0c36d;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #7a5200;
+}
