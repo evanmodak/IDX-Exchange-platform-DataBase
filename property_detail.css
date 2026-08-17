@@ -1,0 +1,90 @@
+.property-detail-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 16px 60px;
+}
+
+.property-detail-back-link {
+  display: inline-block;
+  margin-bottom: 16px;
+  color: #1a1a1a;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.property-detail-back-link:hover {
+  text-decoration: underline;
+}
+
+.property-detail-header {
+  margin-top: 20px;
+}
+
+.property-detail-price {
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.property-detail-address {
+  color: #555;
+  margin-top: 4px;
+}
+
+.property-detail-stats {
+  display: flex;
+  gap: 24px;
+  margin-top: 20px;
+  padding: 16px 0;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.stat-label {
+  font-size: 0.78rem;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.property-detail-description {
+  margin-top: 24px;
+}
+
+.property-detail-description h2,
+.property-detail-map-section h2 {
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.property-detail-description p {
+  line-height: 1.5;
+  color: #333;
+}
+
+.property-detail-map-section {
+  margin-top: 24px;
+}
+
+.property-detail-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 12px;
+  text-align: center;
+}
+
+.property-detail-error p {
+  color: #b3261e;
+}
