@@ -28,3 +28,20 @@
 .listings-error {
   color: #b3261e;
 }
+
+.listings-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.listings-toolbar .listings-count {
+  margin-bottom: 0;
+}
+
+.listings-toolbar .sort-controls {
+  margin-bottom: 0;
+}
