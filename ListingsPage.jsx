@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { fetchProperties, ApiError } from "../api/client";
 import PropertyCard from "./PropertyCard";
 import PropertyFilters from "./PropertyFilters";
+import SortControls from "./SortControls";
 import Pagination from "./Pagination";
 import "./ListingsPage.css";
 
@@ -14,22 +15,24 @@ export default function ListingsPage() {
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [activeFilters, setActiveFilters] = useState({});
+  const [sort, setSort] = useState({ sortBy: undefined, sortOrder: undefined });
 
-  // Tracks the most recently issued request so a slower, older request
-  // can never overwrite state after a newer one has resolved. Fixes
-  // the earlier debug challenge: rapid search -> clear -> search
-  // sequences can let an in-flight response from an earlier search
-  // land AFTER the latest one, causing stale results to flash.
   const latestRequestId = useRef(0);
 
-  function loadProperties(filters, page) {
+  function loadProperties(filters, page, sortState) {
     const requestId = ++latestRequestId.current;
     const offset = (page - 1) * ITEMS_PER_PAGE;
 
     setLoading(true);
     setError(null);
 
-    fetchProperties({ ...filters, limit: ITEMS_PER_PAGE, offset })
+    fetchProperties({
+      ...filters,
+      limit: ITEMS_PER_PAGE,
+      offset,
+      sortBy: sortState.sortBy,
+      sortOrder: sortState.sortOrder,
+    })
       .then((data) => {
         if (requestId !== latestRequestId.current) return;
         setProperties(data.results || []);
@@ -50,7 +53,7 @@ export default function ListingsPage() {
   }
 
   useEffect(() => {
-    loadProperties({}, 1);
+    loadProperties({}, 1, { sortBy: undefined, sortOrder: undefined });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -58,21 +61,31 @@ export default function ListingsPage() {
     const cleaned = Object.fromEntries(
       Object.entries(filters).filter(([, value]) => value !== "" && value != null)
     );
+    const resetSort = { sortBy: undefined, sortOrder: undefined };
     setActiveFilters(cleaned);
+    setSort(resetSort);
     setCurrentPage(1);
-    loadProperties(cleaned, 1);
+    loadProperties(cleaned, 1, resetSort);
   }
 
   function handleClear() {
+    const resetSort = { sortBy: undefined, sortOrder: undefined };
     setActiveFilters({});
+    setSort(resetSort);
     setCurrentPage(1);
-    loadProperties({}, 1);
+    loadProperties({}, 1, resetSort);
   }
 
   function handlePageChange(page) {
     setCurrentPage(page);
-    loadProperties(activeFilters, page);
+    loadProperties(activeFilters, page, sort);
     window.scrollTo(0, 0);
+  }
+
+  function handleSortChange(newSort) {
+    setSort(newSort);
+    setCurrentPage(1);
+    loadProperties(activeFilters, 1, newSort);
   }
 
   const totalPages = Math.max(1, Math.ceil(total / ITEMS_PER_PAGE));
@@ -97,10 +110,17 @@ export default function ListingsPage() {
 
       {!loading && !error && (
         <>
-          <div className="listings-count">
-            {total > 0
-              ? `Showing ${rangeStart}-${rangeEnd} of ${total} properties`
-              : "No properties found matching your filters."}
+          <div className="listings-toolbar">
+            <div className="listings-count">
+              {total > 0
+                ? "Showing " + rangeStart + "-" + rangeEnd + " of " + total + " properties"
+                : "No properties found matching your filters."}
+            </div>
+            <SortControls
+              sortBy={sort.sortBy}
+              sortOrder={sort.sortOrder}
+              onChange={handleSortChange}
+            />
           </div>
 
           {properties.length === 0 ? (
