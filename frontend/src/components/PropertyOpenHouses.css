@@ -1,0 +1,49 @@
+.open-houses {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.open-houses-title {
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+}
+
+.open-houses-empty {
+  color: #777;
+  font-size: 0.9rem;
+}
+
+.open-houses-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.open-house-item {
+  padding: 12px 14px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.open-house-date {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.open-house-time {
+  color: #555;
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+
+.open-house-remarks {
+  margin-top: 8px;
+  font-size: 0.88rem;
+  color: #333;
+  line-height: 1.4;
+}
