@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import ListingsPage from "./components/ListingsPage";
-import PropertyDetailPage from "./components/PropertyDetailPage";
+import ListingsPage from "./pages/ListingsPage";
+import PropertyDetailPage from "./pages/PropertyDetailPage";
 import ErrorBoundary from "./components/ErrorBoundary";
 import "./App.css";
 

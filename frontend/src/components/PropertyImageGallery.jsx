@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { parsePhotos } from "./parsePhotos";
+import { parsePhotos } from "../utils/parsePhotos";
 import "./PropertyImageGallery.css";
 
 export default function PropertyImageGallery({ photos, alt = "Property photo" }) {
