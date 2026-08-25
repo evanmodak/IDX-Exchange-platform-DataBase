@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { fetchProperties, ApiError } from "../api/client";
-import PropertyCard from "./PropertyCard";
-import PropertyFilters from "./PropertyFilters";
-import SortControls from "./SortControls";
-import Pagination from "./Pagination";
+import PropertyCard from "../components/PropertyCard";
+import PropertyFilters from "../components/PropertyFilters";
+import SortControls from "../components/SortControls";
+import Pagination from "../components/Pagination";
 import "./ListingsPage.css";
 
 const ITEMS_PER_PAGE = 20;
