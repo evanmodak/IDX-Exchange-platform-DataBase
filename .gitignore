@@ -26,3 +26,7 @@ docker-compose.override.yml
 # Editor
 .vscode/
 .idea/
+
+# Database dumps (too large for git)
+*.sql
+backend/rets_property.sql
