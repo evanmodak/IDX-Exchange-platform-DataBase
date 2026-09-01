@@ -30,3 +30,8 @@ docker-compose.override.yml
 # Database dumps (too large for git)
 *.sql
 backend/rets_property.sql
+
+# Test coverage reports (generated output, not source)
+coverage/
+backend/coverage/
+frontend/coverage/
