@@ -7,8 +7,26 @@ function isInt(v) {
   return /^\d+$/.test(String(v).trim());
 }
 
+// Whitelist: keys are the sortBy values the API accepts, values are the
+// actual SQL column names in rets_property. sortBy is never interpolated
+// directly into the SQL string -- it's only ever used as a lookup key into
+// this object, and only the mapped column name (never the raw user input)
+// reaches the query. This matters because column/identifier names can't be
+// parameterized with `?` placeholders the way values can, so a whitelist
+// like this is the only safe way to accept a sort column from a client.
+const SORT_COLUMNS = {
+  price: "L_SystemPrice",
+  dateListed: "ListingContractDate",
+  sqft: "LotSizeSquareFeet",
+  beds: "L_Keyword2",
+};
+
+function isValidSortOrder(v) {
+  return v === "asc" || v === "desc";
+}
+
 router.get("/", async (req, res) => {
-  const { city, zipcode, minPrice, maxPrice, beds, baths } = req.query;
+  const { city, zipcode, minPrice, maxPrice, beds, baths, sortBy, sortOrder } = req.query;
   const limit = req.query.limit ?? 20;
   const offset = req.query.offset ?? 0;
 
@@ -31,9 +49,34 @@ router.get("/", async (req, res) => {
     return res.status(400).json({ error: "baths must be a number" });
   }
 
+  // Build the ORDER BY clause from the whitelist above. Default to
+  // ordering by id, which is stable and cheap (primary key), so pagination
+  // never skips or repeats rows between requests when no sort is requested.
+  let orderClause = "ORDER BY id";
+  if (sortBy !== undefined) {
+    if (!Object.prototype.hasOwnProperty.call(SORT_COLUMNS, sortBy)) {
+      return res.status(400).json({
+        error: `sortBy must be one of: ${Object.keys(SORT_COLUMNS).join(", ")}`,
+      });
+    }
+    const order = sortOrder !== undefined ? String(sortOrder).toLowerCase() : "asc";
+    if (!isValidSortOrder(order)) {
+      return res.status(400).json({ error: "sortOrder must be 'asc' or 'desc'" });
+    }
+    const column = SORT_COLUMNS[sortBy];
+    const dir = order.toUpperCase();
+    // Secondary sort by id breaks ties deterministically -- without it,
+    // rows with an equal sort value (e.g. many properties at the same
+    // price) could appear in a different order on different pages,
+    // causing duplicates or gaps as the user paginates.
+    orderClause = `ORDER BY ${column} ${dir}, id ${dir}`;
+  }
+
   const conditions = [];
   const values = [];
 
+  // city is matched case-insensitively and trimmed on both sides, since
+  // the source MLS data isn't consistently cased or whitespace-clean.
   if (city !== undefined) {
     conditions.push("LOWER(TRIM(L_City)) = LOWER(TRIM(?))");
     values.push(city);
@@ -62,6 +105,11 @@ router.get("/", async (req, res) => {
   const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
 
   try {
+    // Two separate queries: one for the total count (used for pagination
+    // math on the frontend) and one for the actual page of rows. Running
+    // COUNT(*) and SELECT ... LIMIT separately, rather than trying to get
+    // both from one query, keeps the LIMIT/OFFSET logic simple and lets
+    // MySQL use the same WHERE-clause index for both.
     const [countRows] = await pool.query(
       `SELECT COUNT(*) AS total FROM rets_property ${whereClause}`,
       values
@@ -79,10 +127,11 @@ router.get("/", async (req, res) => {
          L_Keyword2        AS beds,
          LM_Dec_3          AS baths,
          LotSizeSquareFeet AS sqft,
+         ListingContractDate AS dateListed,
          L_Photos
        FROM rets_property
        ${whereClause}
-       ORDER BY id
+       ${orderClause}
        LIMIT ? OFFSET ?`,
       [...values, parseInt(limit, 10), parseInt(offset, 10)]
     );
@@ -114,6 +163,10 @@ router.get("/:id/openhouses", async (req, res) => {
   try {
     const listingId = id.trim();
 
+    // Check the property exists before querying its open houses, so a
+    // request for a nonexistent listing returns a clear 404 instead of a
+    // confusing empty array that looks the same as "exists but no open
+    // houses scheduled".
     const [propertyRows] = await pool.query(
       "SELECT id FROM rets_property WHERE L_ListingID = ? LIMIT 1",
       [listingId]
