@@ -126,7 +126,71 @@ describe("GET /api/properties", () => {
     expect(values).toContain(2.5);
   });
 
-  test("rejects limit above 100", async () => {
+test("sorts by price ascending", async () => {
+    pool.query
+      .mockResolvedValueOnce([[{ total: 2 }]])
+      .mockResolvedValueOnce([[{ id: 1, price: 500000 }, { id: 2, price: 900000 }]]);
+
+    const res = await request(app).get("/api/properties?sortBy=price&sortOrder=asc");
+
+    expect(res.status).toBe(200);
+    const [sql] = pool.query.mock.calls[1];
+    expect(sql).toMatch(/ORDER BY L_SystemPrice ASC, id ASC/);
+  });
+
+  test("sorts by dateListed descending", async () => {
+    pool.query
+      .mockResolvedValueOnce([[{ total: 1 }]])
+      .mockResolvedValueOnce([[{ id: 1 }]]);
+
+    const res = await request(app).get("/api/properties?sortBy=dateListed&sortOrder=desc");
+
+    expect(res.status).toBe(200);
+    const [sql] = pool.query.mock.calls[1];
+    expect(sql).toMatch(/ORDER BY ListingContractDate DESC, id DESC/);
+  });
+
+  test("defaults sortOrder to asc when only sortBy is given", async () => {
+    pool.query
+      .mockResolvedValueOnce([[{ total: 1 }]])
+      .mockResolvedValueOnce([[{ id: 1 }]]);
+
+    const res = await request(app).get("/api/properties?sortBy=beds");
+
+    expect(res.status).toBe(200);
+    const [sql] = pool.query.mock.calls[1];
+    expect(sql).toMatch(/ORDER BY L_Keyword2 ASC, id ASC/);
+  });
+
+  test("rejects an unknown sortBy value", async () => {
+    const res = await request(app).get("/api/properties?sortBy=notarealcolumn");
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/sortBy must be one of/);
+    expect(pool.query).not.toHaveBeenCalled();
+  });
+
+  test("rejects an invalid sortOrder value", async () => {
+    const res = await request(app).get("/api/properties?sortBy=price&sortOrder=sideways");
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/sortOrder must be/);
+    expect(pool.query).not.toHaveBeenCalled();
+  });
+
+  test("defaults to ORDER BY id when no sortBy is given", async () => {
+    pool.query
+      .mockResolvedValueOnce([[{ total: 1 }]])
+      .mockResolvedValueOnce([[{ id: 1 }]]);
+
+    const res = await request(app).get("/api/properties");
+
+    expect(res.status).toBe(200);
+    const [sql] = pool.query.mock.calls[1];
+    expect(sql).toMatch(/ORDER BY id\b/);
+  });
+
+    test("rejects limit above 100", async () => {
     const res = await request(app).get("/api/properties?limit=500");
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/limit/i);
